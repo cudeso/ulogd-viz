@@ -1,0 +1,8 @@
+*.swp
+config/ulogd.ini
+old/*
+ulogd.sublime-project
+ulogd.sublime-workspace
+www/sb-admin-v2/*
+.DS_Store
+*/.DS_Store

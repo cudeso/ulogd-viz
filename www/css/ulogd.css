@@ -1,0 +1,24 @@
+/**
+    CSS File for ulogd
+
+     *  @author Koen Van Impe <koen.vanimpe@vanimpe.eu>
+*/
+
+.margin-top {
+    margin-top: 16px;
+}
+
+.dashboard-portlet {
+    cursor: pointer; cursor: hand;
+}
+
+.dashboard-portlet div.small {
+    width: 85px;
+    float: right;
+    font-size: 24px;
+}
+
+#map_canvas {
+    width:100%;
+    height:450px;
+}

@@ -1,0 +1,27 @@
+[application]
+title = "Ulogd Visualizer"
+version = 0.1
+webroot = "/ulogd/www/"
+
+[geoip]
+database = "/var/www/htdocs/ulogd/library/geoipdb.dat"
+googlemaps = "enterkey"
+home_latitude = "50.8387"
+home_longitude = "4.363405"
+
+[database]
+username = 
+password = 
+database = 
+host = localhost
+ulogtable = 
+
+[defaults]
+timeframe = lastday
+timeframe_table = lasthour
+maxfilters = 5
+maxrecords_db = 10000
+chart_optionsname = gc_options
+json_optionsname = js_options
+csvexport = "ulogd.csv"
+map_maxmarkers = 10000
