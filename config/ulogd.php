@@ -9,7 +9,7 @@
  * 
  */
 
-define('__ROOT__', $_SERVER["DOCUMENT_ROOT"] . "/ulogd/");
+define('__ROOT__', $_SERVER["DOCUMENT_ROOT"] . "/ulogd-viz/");
 
 try {
   foreach( glob( __ROOT__ . "library/*.php") as $filename) { require_once $filename; }
