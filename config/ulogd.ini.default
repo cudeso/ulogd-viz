@@ -1,10 +1,10 @@
 [application]
 title = "Ulogd Visualizer"
 version = 0.1
-webroot = "/ulogd/www/"
+webroot = "/ulogd-viz/www/"
 
 [geoip]
-database = "/var/www/htdocs/ulogd/library/geoipdb.dat"
+database = "/var/www/htdocs/ulogd-viz/library/geoipdb.dat"
 googlemaps = "enterkey"
 home_latitude = "50.8387"
 home_longitude = "4.363405"
