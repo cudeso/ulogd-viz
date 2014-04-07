@@ -25,6 +25,9 @@ if (is_array($get)) {
   if (array_key_exists("numberOfEntries",$get)) {
     $ulogd_json->numberOfEntries($get);
   }
+  elseif (array_key_exists("stats",$get)) {
+    $ulogd_json->getStats($get);
+  }  
   elseif (array_key_exists("topPort",$get)) {
     $ulogd_json->topPort($get);
   }

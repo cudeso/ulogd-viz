@@ -93,7 +93,9 @@ class ulogd_json {
     if (is_array($result_container)) {
       echo json_encode(array( "aaData" => $result_container));
     }
-    else return false;
+    else {
+      echo json_encode(array( "aaData" => array( array( "no data", "-", "-", "-", "-", "-", "-", "-"))));
+    }
     
   }
 
@@ -251,10 +253,18 @@ class ulogd_json {
     $timeframe = strtolower($request["numberOfEntries"]);
     $time = $this->convertTimeframeParam($timeframe);
 
+    $where = "";
+    if (array_key_exists("protocol",$request)) {
+      $protocol = strtolower($request["protocol"]);
+      if ($protocol == "tcp") $where = " AND ip_protocol = 6";
+      elseif ($protocol == "udp") $where = " AND ip_protocol = 17";
+      elseif ($protocol == "icmp") $where = " AND ip_protocol = 1";
+    }
+
     $con = mysqli_connect(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
     $sql = "  SELECT COUNT(*) AS qt
               FROM " . DB_TABLE . "
-              WHERE oob_time_sec > " . $time;
+              WHERE oob_time_sec > " . $time . $where;
 
     $result = mysqli_query( $con, $sql );
     $row = mysqli_fetch_assoc($result);
@@ -265,6 +275,40 @@ class ulogd_json {
     echo json_encode( $result );
   }
 
+
+
+
+ /**
+  * Return statistics
+  *
+  * request       array         array with all the filters, options, ...
+  * returns       JSON encoded string
+  *
+  */
+  public function getStats($request = array()) {
+
+    if (array_key_exists("stats",$request)) {
+      $stats = strtolower($request["stats"]);
+      if ($stats == "first") $order = " ASC ";
+      else $order = " DESC ";
+
+      $con = mysqli_connect(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
+      $sql = "  SELECT oob_time_sec
+                FROM " . DB_TABLE . "
+                ORDER BY oob_time_sec " . $order . " LIMIT 1";
+
+      $result = mysqli_query( $con, $sql );
+      $row = mysqli_fetch_assoc($result);
+      $timestamp = date("Y-m-d H:i:s", $row["oob_time_sec"]);
+
+      mysqli_close($con);  
+
+      $result = array( "result" => $timestamp);
+      echo json_encode( $result );
+
+    }
+    else return false;
+  }
 
 
 
