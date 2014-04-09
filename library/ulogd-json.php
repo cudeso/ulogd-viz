@@ -115,24 +115,30 @@ class ulogd_json {
     $time = $this->convertTimeframeParam($timeframe);
 
     $where = "";
+    $count = 0;
+    $qt = 0;
     $ulogd_blacklist = new ulogd_blacklist();
     $blacklist = $ulogd_blacklist->get();
-    foreach ($blacklist as $value) {
-      $where .= " AND ip_saddr = " . ip2long($value);
+
+    if (is_array($blacklist) and count($blacklist) > 0) {
+      foreach ($blacklist as $value) {
+        $value = trim($value);
+        $where .= " AND ip_saddr = " . ip2long($value);
+      }
+
+      $con = mysqli_connect(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
+      $sql = "  SELECT COUNT(*) AS qt
+                FROM " . DB_TABLE . "
+                WHERE oob_time_sec > " . $time . $where . "
+                ORDER BY qt DESC LIMIT 1";
+      $result = mysqli_query( $con, $sql );
+      $row = mysqli_fetch_row($result);
+      $qt = (int) $row["qt"];
+
+      $count = $ulogd_blacklist->count();
+
+      mysqli_close($con);        
     }
-
-    $con = mysqli_connect(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
-    $sql = "  SELECT COUNT(*) AS qt
-              FROM " . DB_TABLE . "
-              WHERE oob_time_sec > " . $time . $where . "
-              ORDER BY qt DESC LIMIT 1";
-    $result = mysqli_query( $con, $sql );
-    $row = mysqli_fetch_assoc($result);
-    $qt = (int) $row["qt"];
-
-    $count = $ulogd_blacklist->count();
-
-    mysqli_close($con);  
 
     $result = array( "hits" => $qt , "count" => $count);
     echo json_encode( $result );

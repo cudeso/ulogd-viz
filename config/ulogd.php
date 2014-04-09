@@ -35,6 +35,7 @@ define('DEFAULT_CHART_OPTIONSNAME', $configuration["defaults"]["chart_optionsnam
 define('DEFAULT_MAP_MAXMARKERS', $configuration["defaults"]["map_maxmarkers"]);
 define('DEFAULT_JSON_OPTIONSNAME', $configuration["defaults"]["json_optionsname"]);
 define('DEFAULT_CSVEXPORT', $configuration["defaults"]["csvexport"]);
+define('DEFAULT_BLACKLIST', $configuration["defaults"]["blacklist"]);
 
 define('GEOIP_DATABASE', $configuration["geoip"]["database"]);
 define('GOOGLEMAPS_API', $configuration["geoip"]["googlemaps"]);

@@ -19,9 +19,16 @@ class ulogd_blacklist {
      *  @return  array        the result
      */
     public function get() {
-        $s = array( "127.0.0.1" 
-                ); 
-        return $s;
+        $blacklist = array();
+        $handle = fopen( DEFAULT_BLACKLIST , "r" );
+        if ($handle) {
+            while(!feof($handle)){
+                $ip = fgets($handle);
+                array_push($blacklist, $ip);
+            }
+        }
+        fclose($handle);
+        return $blacklist;
     }
 
 
@@ -32,6 +39,10 @@ class ulogd_blacklist {
      *  @return  integer        the number of entries
      */
     public function count() {
-        return 1;
+        $blacklist = $this->get();
+        if (is_array($blacklist) and count($blacklist) > 0) {
+            return count($blacklist);
+        }
+        else return 0;
     }
 }

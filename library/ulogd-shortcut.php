@@ -50,11 +50,16 @@ class ulogd_shortcut {
         }
         $con = mysqli_connect(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
         $result = mysqli_query( $con, $sql );
-        $result_shortcut = array();
-        while ($row = mysqli_fetch_assoc($result)) {
-            array_push($result_shortcut, array( "request" => (string) stripslashes($row["params"]), "label" => (string) $row["shortcut"]));
-        }
+        if (is_array($result)) {
+            $result_shortcut = array();
+            while ($row = mysqli_fetch_assoc($result)) {
+                array_push($result_shortcut, array( "request" => (string) stripslashes($row["params"]), "label" => (string) $row["shortcut"]));
+            }
 
-        return $result_shortcut;
+            return $result_shortcut;            
+        }
+        else {
+            return array( "request" => false) ;
+        }
     }    
 }
