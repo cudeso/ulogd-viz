@@ -14,6 +14,18 @@ class ulogd_json {
 
 
   /**
+  * Return the timestamp from which to clean up the entries
+  *
+  * returns       int     the time integer
+  *
+  */
+  public function getCronCleanup() {
+    return $this->convertTimeframeParam(DEFAULT_CLEANUPTIME);
+  }
+
+
+
+  /**
   * Convert a timeframe identifier to a timestamp
   *
   * timeframe       string      the timeframe identifier

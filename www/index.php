@@ -317,7 +317,7 @@ ulogd_printhtmlBodyStart($_SERVER["PHP_SELF"]);
           });            
         });
 
-        $.getJSON('get.php', { blacklist: "lastweek" }, function(json) {
+        $.getJSON('get.php', { blacklist: "lastday" }, function(json) {
             $("#blacklist_today").empty().append( json.hits );
             $("#blacklist_count").empty().append( json.count + " entries" );
         });

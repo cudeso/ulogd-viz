@@ -26,3 +26,4 @@ json_optionsname = js_options
 csvexport = "ulogd.csv"
 map_maxmarkers = 10000
 blacklist = "/var/www/htdocs/ulogd-viz/config/blacklist.txt"
+cleanuptime = lastmonth

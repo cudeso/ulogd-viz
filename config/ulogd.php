@@ -9,7 +9,12 @@
  * 
  */
 
-define('__ROOT__', $_SERVER["DOCUMENT_ROOT"] . "/ulogd-viz/");
+if (isset($_SERVER["DOCUMENT_ROOT"]) and strlen($_SERVER["DOCUMENT_ROOT"]) > 0) {
+    define('__ROOT__', $_SERVER["DOCUMENT_ROOT"] . "/ulogd-viz/");
+}
+else {
+    define('__ROOT__', $_SERVER["PWD"] . "/../");    
+}
 
 try {
   foreach( glob( __ROOT__ . "library/*.php") as $filename) { require_once $filename; }
@@ -36,6 +41,7 @@ define('DEFAULT_MAP_MAXMARKERS', $configuration["defaults"]["map_maxmarkers"]);
 define('DEFAULT_JSON_OPTIONSNAME', $configuration["defaults"]["json_optionsname"]);
 define('DEFAULT_CSVEXPORT', $configuration["defaults"]["csvexport"]);
 define('DEFAULT_BLACKLIST', $configuration["defaults"]["blacklist"]);
+define('DEFAULT_CLEANUPTIME', $configuration["defaults"]["cleanuptime"]);
 
 define('GEOIP_DATABASE', $configuration["geoip"]["database"]);
 define('GOOGLEMAPS_API', $configuration["geoip"]["googlemaps"]);

@@ -2,7 +2,8 @@
 /**
  *  ulogd visualizer
  *
- *  JSON builder
+ *    Upload data
+ *
  *  @author Koen Van Impe <koen.vanimpe@vanimpe.eu>
  *  @package  ulogdviz
  * 
