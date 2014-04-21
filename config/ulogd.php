@@ -42,6 +42,9 @@ define('DEFAULT_JSON_OPTIONSNAME', $configuration["defaults"]["json_optionsname"
 define('DEFAULT_CSVEXPORT', $configuration["defaults"]["csvexport"]);
 define('DEFAULT_BLACKLIST', $configuration["defaults"]["blacklist"]);
 define('DEFAULT_CLEANUPTIME', $configuration["defaults"]["cleanuptime"]);
+define('DEFAULT_DATEFORMAT_SHORT', $configuration["defaults"]["dateformat_short"]);
+define('DEFAULT_DATEFORMAT_LONG', $configuration["defaults"]["dateformat_long"]);
+
 
 define('GEOIP_DATABASE', $configuration["geoip"]["database"]);
 define('GOOGLEMAPS_API', $configuration["geoip"]["googlemaps"]);

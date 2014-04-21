@@ -28,13 +28,14 @@ $date2time = $get["date2time"];
 
 if (isset($ip2long))    $ip2long = ip2long($ip2long);
 if (isset($long2ip))    $long2ip = long2ip($long2ip);
-if (isset($time2date) and strlen($time2date) > 0)    $time2date = date("D-m-Y H:i:s" , $time2date);
+if (isset($time2date) and strlen($time2date) > 0)    $time2date = date(DEFAULT_DATEFORMAT_LONG , $time2date);
 
+$currentdate = date(DEFAULT_DATEFORMAT_LONG);
 ?>
 
 <div class="row">
     <div class="col-lg-12">
-        <h3>Statistics</h3>
+        <h3>Statistics for &nbsp;&nbsp;<small><?php echo $currentdate; ?></small></h3>
     </div>
 </div>
 

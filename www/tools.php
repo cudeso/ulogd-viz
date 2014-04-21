@@ -28,7 +28,7 @@ $date2time = $get["date2time"];
 
 if (isset($ip2long))    $ip2long = ip2long($ip2long);
 if (isset($long2ip))    $long2ip = long2ip($long2ip);
-if (isset($time2date) and strlen($time2date) > 0)    $time2date = date("D-m-Y H:i:s" , $time2date);
+if (isset($time2date) and strlen($time2date) > 0)    $time2date = date(DEFAULT_DATEFORMAT_LONG, $time2date);
 
 ?>
 
@@ -59,7 +59,7 @@ if (isset($time2date) and strlen($time2date) > 0)    $time2date = date("D-m-Y H:
                 Time to Date : <?php echo $time2date; ?>                
             </div>
             <div class="form-group">
-                <input class="input-mini form-control" type="text" id="date2time" name="date2time" size="20" maxlength="20" placeholder="Date to time">
+                <input class="input-mini form-control" type="text" id="date2time" name="date2time" size="20" maxlength="20" placeholder="Date to time (<?php echo DEFAULT_DATEFORMAT_LONG; ?>)">
                 <br />
                 Date to Time : <?php echo $date2time; ?>                
             </div>                        

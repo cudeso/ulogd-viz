@@ -75,7 +75,7 @@ class ulogd_json {
     $result_db = mysqli_query( $con, $sql );
 
     while($row = mysqli_fetch_assoc($result_db)) {
-      $timestamp = date("Y-m-d H:i:s", $row["oob_time_sec"]);
+      $timestamp = date(DEFAULT_DATEFORMAT_LONG, $row["oob_time_sec"]);
       $ip_saddr = long2ip($row["ip_saddr"]);
       $ip_daddr = long2ip($row["ip_daddr"]);
       $protocol = $row["ip_protocol"];
@@ -317,7 +317,7 @@ class ulogd_json {
 
       $result = mysqli_query( $con, $sql );
       $row = mysqli_fetch_assoc($result);
-      $timestamp = date("Y-m-d H:i:s", $row["oob_time_sec"]);
+      $timestamp = date(DEFAULT_DATEFORMAT_LONG, $row["oob_time_sec"]);
 
       mysqli_close($con);  
 
@@ -546,7 +546,7 @@ class ulogd_json {
               "starttime" =>  mktime(date("H") - 1 , date("i"), date("s"), date("m") , date("d") , date("Y")),
               "for_x" => 60,
               "str_to_time" => "minute",
-              "date_str" => "Y-m-d H:i",
+              "date_str" => DEFAULT_DATEFORMAT_SHORT,
               "sql_timeframe" =>  $sql_timeframe,
               "sql_from" => "from_unixtime(oob_time_sec, '$sql_timeframe')"
         );
@@ -557,7 +557,7 @@ class ulogd_json {
               "starttime" =>  mktime(date("H") , date("i"), date("s"), date("m") - 15 , date("d") , date("Y")),
               "for_x" => 15,
               "str_to_time" => "minute",
-              "date_str" => "Y-m-d H:i",
+              "date_str" => DEFAULT_DATEFORMAT_SHORT,
               "sql_timeframe" =>  $sql_timeframe,
               "sql_from" => "from_unixtime(oob_time_sec, '$sql_timeframe')"
         );
@@ -568,7 +568,7 @@ class ulogd_json {
               "starttime" =>  mktime(date("H") , date("i"), date("s"), date("m") - 30, date("d") , date("Y")),
               "for_x" => 30,
               "str_to_time" => "minute",
-              "date_str" => "Y-m-d H:i",
+              "date_str" => DEFAULT_DATEFORMAT_SHORT,
               "sql_timeframe" =>  $sql_timeframe,
               "sql_from" => "from_unixtime(oob_time_sec, '$sql_timeframe')"
         );
