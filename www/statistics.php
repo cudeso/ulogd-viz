@@ -21,15 +21,6 @@ ulogd_printhtmlBodyStart($_SERVER["PHP_SELF"]);
 
 $get = $_GET;
 
-$ip2long = $get["ip2long"];
-$long2ip = $get["long2ip"];
-$time2date = $get["time2date"];
-$date2time = $get["date2time"];
-
-if (isset($ip2long))    $ip2long = ip2long($ip2long);
-if (isset($long2ip))    $long2ip = long2ip($long2ip);
-if (isset($time2date) and strlen($time2date) > 0)    $time2date = date(DEFAULT_DATEFORMAT_LONG , $time2date);
-
 $currentdate = date(DEFAULT_DATEFORMAT_LONG);
 ?>
 

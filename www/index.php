@@ -279,12 +279,26 @@ ulogd_printhtmlBodyStart($_SERVER["PHP_SELF"]);
                 document.location.href=url_topPort_today_5;
               });
             });  
-
-
         });
 
         $.getJSON('get.php', { topIp: "lastday"}, function(json) {
-            $("#topIp_today").empty().append( json.result );
+            $("#topIp_today").empty().append( json[0][0].ip );
+        });
+
+        $.getJSON('get.php', { topIp: "lastday", ipcount: 5}, function(json) {
+            url_topIp_today_5 = "generate.php?timeframe=lastday&formoutput=output_chart&";
+            html = "";
+            $.each(json[0], function(key, i) {
+              html = html + i.ip + " <div class=\"small\"><small>" + i.qt + "</small></div> <br />";
+              url_topIp_today_5 = url_topIp_today_5 + "ipinclude[]=include&ip[]=" + i.ip + "&ipflow[]=source&";
+            });
+            $("#topIp_today_5").empty().append( html );
+
+            $(document).ready(function() { 
+              $('#top_ip-5').on('click', function(e){
+                document.location.href=url_topIp_today_5;
+              });
+            });  
         });
 
         $.getJSON('get.php', { topPort: "lastday", port: 22, protocol: "tcp" }, function(json) {

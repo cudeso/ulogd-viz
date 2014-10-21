@@ -27,7 +27,7 @@ $time2date = $get["time2date"];
 $date2time = $get["date2time"];
 
 if (isset($ip2long))    $ip2long = ip2long($ip2long);
-if (isset($long2ip))    $long2ip = long2ip($long2ip);
+if (isset($long2ip))    $long2ip = db2ip($long2ip);
 if (isset($time2date) and strlen($time2date) > 0)    $time2date = date(DEFAULT_DATEFORMAT_LONG, $time2date);
 
 ?>
@@ -38,21 +38,29 @@ if (isset($time2date) and strlen($time2date) > 0)    $time2date = date(DEFAULT_D
     </div>
 </div>
 
+<form action="tools.php" role="form" id="dashboard-generate" method="get" class="form-inline">
+
 <div class="row">
     <div class="col-lg-12">
 
         <div class="panel-body">
-          <form action="tools.php" role="form" id="dashboard-generate" method="get" class="form-inline">
             <div class="form-group">
-                <input class="input-mini form-control" type="text" id="ip2long" name="ip2long" size="20" maxlength="20" placeholder="IP to Long">
+                <input class="input-mini form-control" type="text" id="ip2long" name="ip2long" size="32" maxlength="32" placeholder="IP to Long">
                 <br />
                 IP 2 Long : <?php echo $ip2long; ?>
             </div>
             <div class="form-group">
-                <input class="input-mini form-control" type="text" id="long2ip" name="long2ip" size="20" maxlength="20" placeholder="Long to IP">
+                <input class="input-mini form-control" type="text" id="long2ip" name="long2ip" size="32" maxlength="32" placeholder="Long (hex) to IP">
                 <br />
                 Long 2 IP : <?php echo $long2ip; ?>                
             </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-12">
+
+        <div class="panel-body">
             <div class="form-group">
                 <input class="input-mini form-control" type="text" id="time2date" name="time2date" size="20" maxlength="20" placeholder="Time to Date">
                 <br />
@@ -67,10 +75,11 @@ if (isset($time2date) and strlen($time2date) > 0)    $time2date = date(DEFAULT_D
                 <input type="submit" class="btn btn-primary" value="Submit"  />
               </div>    
 
-          </form>
         </div>
     </div>
 </div>
+
+</form>
 
 <?php            
 ulogd_printhtmlEnd();

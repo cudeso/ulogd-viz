@@ -175,6 +175,21 @@ function timeframeToHtml($timeframe) {
 
 
 /** 
+ * Convert a value from a database field to an IP
+ *
+ *  value       string       the database value
+ *  @return     string       a string containing the IP
+ */
+function db2ip($value) {
+    if (strlen($value) > 0) {
+        return long2ip(hexdec($value));
+    }
+    else return APP_UNKNOWN;
+}
+
+
+
+/** 
  * Custom debug
  *
  *  debug       array       print the content of this value

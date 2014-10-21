@@ -67,7 +67,7 @@ class ulogd_json {
     if (!strlen($timeframe) > 0)  $timeframe = DEFAULT_TIMEFRAME;    
     $time = $this->convertTimeframeParam($timeframe);
     $con = mysqli_connect(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
-    $sql = "  SELECT oob_time_sec,ip_protocol,ip_saddr, ip_daddr,ip_totlen,ip_ttl,udp_sport,udp_dport,tcp_sport,tcp_dport,icmp_type,icmp_code
+    $sql = "  SELECT oob_time_sec,ip_protocol,hex(ip_saddr) as ip_saddr, hex(ip_daddr) as ip_daddr,ip_totlen,ip_ttl,udp_sport,udp_dport,tcp_sport,tcp_dport,icmp_type,icmp_code
                FROM " . DB_TABLE . "
                WHERE oob_time_sec > " . $time . "
                ORDER BY oob_time_sec DESC
@@ -76,8 +76,8 @@ class ulogd_json {
 
     while($row = mysqli_fetch_assoc($result_db)) {
       $timestamp = date(DEFAULT_DATEFORMAT_LONG, $row["oob_time_sec"]);
-      $ip_saddr = long2ip($row["ip_saddr"]);
-      $ip_daddr = long2ip($row["ip_daddr"]);
+      $ip_saddr = db2ip($row["ip_saddr"]);
+      $ip_daddr = db2ip($row["ip_daddr"]);
       $protocol = $row["ip_protocol"];
       $ip_ttl = $row["ip_ttl"];
       $ip_totlen = $row["ip_totlen"];
@@ -177,21 +177,24 @@ class ulogd_json {
     if ($destination == "source") $destination = "ip_saddr";
     else $destination = "ip_daddr";
 
+    if (!(array_key_exists("ipcount",$request))) $request["ipcount"] = 1;
+    $ipcount = (int) $request["ipcount"];
+
     $con = mysqli_connect(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
-    $sql = "  SELECT COUNT(*) AS qt, " . $destination . " AS ip
+    $sql = "  SELECT COUNT(*) AS qt, hex(" . $destination . ") AS ip
               FROM " . DB_TABLE . "
               WHERE oob_time_sec > " . $time . "
               GROUP BY " . $destination . "
-              ORDER BY qt DESC LIMIT 1";
+              ORDER BY qt DESC LIMIT ".$ipcount;
     $result = mysqli_query( $con, $sql );
-    $row = mysqli_fetch_assoc($result);
-    $qt = (int) $row["qt"];
-    $ip = (int) $row["ip"];
-    if ($ip > 0)  $ip = long2ip($ip);
-    else $ip = APP_UNKNOWN;
+    while ($row = mysqli_fetch_assoc($result)) {
+      $qt = (int) $row["qt"];
+      $ip = db2ip($row["ip"]);
+      $result_container[] = array( "qt" => $qt, "ip" => $ip );
+    }
     mysqli_close($con);  
-
-    $result = array( "result" => $ip );
+    if (count($result_container) < 1) $result_container[] = array( "qt" => 0, "ip" => APP_UNKNOWN);
+    $result = array( $result_container );
     echo json_encode( $result );
   }
 
@@ -373,7 +376,7 @@ class ulogd_json {
       $row = mysqli_fetch_assoc($dbresult);
       $markercount = (int) $row["markercount"];
 
-      $sql = "SELECT COUNT(*) AS qt, " . $groupbyip . " AS ip FROM " . DB_TABLE . " WHERE ".
+      $sql = "SELECT COUNT(*) AS qt, hex(" . $groupbyip . ") AS ip FROM " . DB_TABLE . " WHERE ".
                 " oob_time_sec > " . $time . " " .
                 $where.
                 " GROUP BY " . $groupbyip;
@@ -388,11 +391,11 @@ class ulogd_json {
       }
 
       while($row = mysqli_fetch_assoc($dbresult)) {
-        $ip = googlemap_IpToLocation(long2ip($row["ip"]));
+        $ip = googlemap_IpToLocation(db2ip($row["ip"]));
         $qt = (int) round($row["qt"] / $markerrecount);
         if ($qt > 0) {
           $markercountdb = $markercountdb + $qt;
-          array_push($result, array(  "qt" => $qt, "ip" => long2ip($row["ip"]), "latitude" => $ip["latitude"], "longitude" => $ip["longitude"]));
+          array_push($result, array(  "qt" => $qt, "ip" => db2ip($row["ip"]), "latitude" => $ip["latitude"], "longitude" => $ip["longitude"]));
         }
       }
 
