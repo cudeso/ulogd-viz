@@ -36,6 +36,7 @@ class ulogd_json {
 
     if (strlen($timeframe) > 0) {
       if ($timeframe == "lastday") $time =  mktime(date("H") , date("i"), date("s"), date("m") , date("d") - 1, date("Y"));
+      elseif ($timeframe == "last2day") $time =  mktime(date("H") , date("i"), date("s"), date("m") , date("d") - 2, date("Y"));
       elseif ($timeframe == "lasthour") $time =  mktime(date("H") - 1 , date("i"), date("s"), date("m") , date("d"), date("Y"));
       elseif ($timeframe == "last4hour") $time =  mktime(date("H") - 4 , date("i"), date("s"), date("m") , date("d"), date("Y"));
       elseif ($timeframe == "last3day") $time =  mktime(date("H") , date("i"), date("s"), date("m") , date("d") - 3, date("Y"));      
@@ -66,39 +67,53 @@ class ulogd_json {
     $timeframe = strtolower($request["timeframe"]);
     if (!strlen($timeframe) > 0)  $timeframe = DEFAULT_TIMEFRAME;    
     $time = $this->convertTimeframeParam($timeframe);
+
+    $filters = convertRequestToParams($request);
+    $where = "";
+    if (is_array($filters) and count($filters) > 0) {
+      foreach($filters as $filter) {
+        $where .= " ( 1=1 " .$this->filterToWhere($filter) . " ) OR ";
+      }
+      $where = rtrim($where, " OR ");
+    }
+    else $where = " 1=1 ";
+
     $con = mysqli_connect(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
     $sql = "  SELECT oob_time_sec,ip_protocol,hex(ip_saddr) as ip_saddr, hex(ip_daddr) as ip_daddr,ip_totlen,ip_ttl,udp_sport,udp_dport,tcp_sport,tcp_dport,icmp_type,icmp_code
                FROM " . DB_TABLE . "
-               WHERE oob_time_sec > " . $time . "
+               WHERE oob_time_sec > " . $time . " AND " . $where . "
                ORDER BY oob_time_sec DESC
                LIMIT " . DEFAULT_MAXRECORDS_DB;
     $result_db = mysqli_query( $con, $sql );
 
-    while($row = mysqli_fetch_assoc($result_db)) {
-      $timestamp = date(DEFAULT_DATEFORMAT_LONG, $row["oob_time_sec"]);
-      $ip_saddr = db2ip($row["ip_saddr"]);
-      $ip_daddr = db2ip($row["ip_daddr"]);
-      $protocol = $row["ip_protocol"];
-      $ip_ttl = $row["ip_ttl"];
-      $ip_totlen = $row["ip_totlen"];
-      if ($protocol == 17) {
-          $sport = $row["udp_sport"];
-          $dport = $row["udp_dport"];
-          $strprotocol = "udp";
-      }
-      elseif ($protocol == 6) {
-          $sport = $row["tcp_sport"];
-          $dport = $row["tcp_dport"];                                                
-          $strprotocol = "tcp";
-      }
-      elseif ($protocol == 1) {
-          $sport = $row["icmp_type"] . "/" . $row["icmp_code"];
-          $dport = "";
-          $strprotocol = "icmp";
-      }
+    if (mysqli_num_rows($result_db) > 0) {
+      while($row = mysqli_fetch_assoc($result_db)) {
+        $timestamp = date(DEFAULT_DATEFORMAT_LONG, $row["oob_time_sec"]);
+        $ip_saddr = db2ip($row["ip_saddr"]);
+        $ip_daddr = db2ip($row["ip_daddr"]);
+        $protocol = $row["ip_protocol"];
+        $ip_ttl = $row["ip_ttl"];
+        $ip_totlen = $row["ip_totlen"];
+        if ($protocol == 17) {
+            $sport = $row["udp_sport"];
+            $dport = $row["udp_dport"];
+            $strprotocol = "udp";
+        }
+        elseif ($protocol == 6) {
+            $sport = $row["tcp_sport"];
+            $dport = $row["tcp_dport"];                                                
+            $strprotocol = "tcp";
+        }
+        elseif ($protocol == 1) {
+            $sport = $row["icmp_type"] . "/" . $row["icmp_code"];
+            $dport = "";
+            $strprotocol = "icmp";
+        }
 
-      $result_container[] = array( $timestamp , $strprotocol , $ip_saddr, $sport , $ip_daddr, $dport, $ip_ttl, $ip_totlen);
+        $result_container[] = array( $timestamp , $strprotocol , $ip_saddr, $sport , $ip_daddr, $dport, $ip_ttl, $ip_totlen);
+      }      
     }
+
 //    $result_container = array_reverse($result_container);        
     mysqli_close($con); 
 
@@ -227,33 +242,122 @@ class ulogd_json {
     }
 
     $con = mysqli_connect(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
-    $sql = "  SELECT COUNT(*) AS qt, ip_protocol, tcp_dport, udp_dport, icmp_type
-              FROM " . DB_TABLE . "
-              WHERE oob_time_sec > " . $time . $where . "
-              GROUP BY ip_protocol, tcp_dport, udp_dport,icmp_type
-              ORDER BY qt DESC LIMIT " . $limit . ";";
-//echo $sql;
-    $dbresult = mysqli_query( $con, $sql );
     $result = array();
-    while($row = mysqli_fetch_assoc($dbresult)) {
-      $qt = (int) $row["qt"];
-      $protocol = (int) $row["ip_protocol"];
-      if ($protocol == 6) {
-        $protocol = "tcp";
-        $port = $row["tcp_dport"];
+
+    if (array_key_exists("trending", $request) and $request["trending"] == true) {
+      /* Trending results
+        */
+      if (!(array_key_exists("direction",$request))) $request["direction"] = "dport";
+      $direction = $request["direction"];
+      if ($direction != "dport" and $direction != "sport") $direction = "dport";
+
+      $tcp = "tcp_$direction";
+      $udp = "udp_$direction";
+      $time_24 = $this->convertTimeframeParam("lastday");
+      $time_48 = $this->convertTimeframeParam("last2day");
+
+      // Port info last 24h
+      $sql = "  SELECT COUNT(*) AS qt, ip_protocol, $tcp, $udp
+                FROM " . DB_TABLE . "
+                WHERE ip_protocol != 1 AND oob_time_sec > " . $time_24 . $where . "
+                GROUP BY ip_protocol, $tcp, $udp
+                ORDER BY qt DESC ;";
+      $dbresult_24 = mysqli_query( $con, $sql );
+
+      // Port info 48h -> 24h
+      $sql = "  SELECT COUNT(*) AS qt, ip_protocol, $tcp, $udp
+                FROM " . DB_TABLE . "
+                WHERE ip_protocol != 1 AND oob_time_sec > " . $time_48 . " AND oob_time_sec < " . $time_24 . $where . "
+                GROUP BY ip_protocol, $tcp, $udp
+                ORDER BY qt DESC ;";
+      $dbresult_48 = mysqli_query( $con, $sql );
+
+      $result_24 = array();
+      $result_48 = array();
+      while($row = mysqli_fetch_assoc($dbresult_24)) {
+        $result_24[] = $row;
       }
-      elseif ($protocol == 17) {
-        $protocol = "udp";
-        $port = $row["udp_dport"];
+
+      while($row = mysqli_fetch_assoc($dbresult_48)) {
+        // Only compute if there's a record found in the last 24h
+        foreach($result_24 as $row_24) {
+          if ($row_24["ip_protocol"] == $row["ip_protocol"] 
+                and $row_24[$tcp] == $row[$tcp] 
+                and $row_24[$udp] == $row[$udp]) {
+            // Same port & protocol; compute
+            $increase_val = round($row_24["qt"] / $row["qt"] * 100,2);
+            $result_increase[] =  array( "ip_protocol" => $row["ip_protocol"],
+                                "tcp" => $row[$tcp],
+                                "udp" => $row[$udp],
+                                "qt_from" => $row["qt"],
+                                "qt_to" => $row_24["qt"],
+                                "increase" => $increase_val);
+          }
+        }
+        $result_48[] = $row;
       }
-      elseif ($protocol == 1) {
-        $protocol = "icmp";
-        $port = $row["icmp_type"];
+
+      if (is_array($result_increase)) {
+        // Sort the result
+        foreach ($result_increase as $key => $row) {
+            $increase[$key]  = $row['increase'];
+        }
+        array_multisort($increase, SORT_DESC, $result_increase);
+
+        // Limit the results
+        $result_increase = array_slice($result_increase, 0, $limit);      
+        foreach($result_increase as $row) {
+          $protocol = (int) $row["ip_protocol"];
+          $increase = $row["increase"];
+          $qt_from = $row["qt_from"];
+          $qt_to = $row["qt_to"];
+
+          if ($protocol == 6) {
+            $protocol = "tcp";
+            $port = $row["tcp"];
+          }
+          elseif ($protocol == 17) {
+            $protocol = "udp";
+            $port = $row["udp"];
+          }
+          elseif ($protocol == 1) {
+            $protocol = "icmp";
+            $port = $row["icmp_type"];
+          }          
+          array_push($result, array(  "increase" => $increase, "qt_to" => $qt_to, "qt_from" => $qt_from, "protocol" => $protocol, "port" => $port));        
+        }
       }
-      array_push($result, array(  "qt" => $qt, "protocol" => $protocol, "port" => $port));
-    }  
+    }
+    else {
+      /* Top for one or multiple ports
+      */
+      $sql = "  SELECT COUNT(*) AS qt, ip_protocol, tcp_dport, udp_dport, icmp_type
+                FROM " . DB_TABLE . "
+                WHERE oob_time_sec > " . $time . $where . "
+                GROUP BY ip_protocol, tcp_dport, udp_dport,icmp_type
+                ORDER BY qt DESC LIMIT " . $limit . ";";
+
+      $dbresult = mysqli_query( $con, $sql );
+      while($row = mysqli_fetch_assoc($dbresult)) {
+        $qt = (int) $row["qt"];
+        $protocol = (int) $row["ip_protocol"];
+        if ($protocol == 6) {
+          $protocol = "tcp";
+          $port = $row["tcp_dport"];
+        }
+        elseif ($protocol == 17) {
+          $protocol = "udp";
+          $port = $row["udp_dport"];
+        }
+        elseif ($protocol == 1) {
+          $protocol = "icmp";
+          $port = $row["icmp_type"];
+        }
+        array_push($result, array(  "qt" => $qt, "protocol" => $protocol, "port" => $port));
+      }  
+    }
     if (!count($result) > 0) {
-      array_push($result, array(  "qt" => 0, "protocol" => "none", "port" => 0));
+      array_push($result, array(  "qt" => 0, "protocol" => "none", "port" => 0, "noresults" => true));
     }
 
     echo json_encode( $result );
@@ -380,7 +484,7 @@ class ulogd_json {
                 " oob_time_sec > " . $time . " " .
                 $where.
                 " GROUP BY " . $groupbyip;
-//echo $sql;
+
       $dbresult = mysqli_query( $con, $sql );
 
       $result = array();
@@ -435,21 +539,21 @@ class ulogd_json {
       }
     }
     if (array_key_exists("host", $filter)) {
-      $ip = ip2long($filter["host"]);
+      $ip = ip2db($filter["host"]);
       $flow = $filter["flow"];
       $include = $filter["include"];
 
       if ($flow == "source") {
-        if ($include == "include") $where .= " AND ip_saddr = " . $ip;
-        elseif ($include == "exclude") $where .= " AND ip_saddr != " . $ip;
+        if ($include == "include") $where .= " AND hex(ip_saddr) = '" . $ip . "' ";
+        elseif ($include == "exclude") $where .= " AND hex(ip_saddr) != '" . $ip . "' ";
       } 
       elseif ($flow == "dest") {
-        if ($include == "include") $where .= " AND ip_daddr = " . $ip;
-        elseif ($include == "exclude") $where .= " AND ip_daddr != " . $ip;
+        if ($include == "include") $where .= " AND hex(ip_daddr) = '" . $ip . "' ";
+        elseif ($include == "exclude") $where .= " AND hex(ip_daddr) != '" . $ip . "' ";
       }
       elseif ($flow == "sourcedest") {
-        if ($include == "include") $where .= " AND ( ip_saddr = " . $ip . " OR ip_daddr = " . $ip . " ) ";
-        elseif ($include == "exclude") $where .= " AND !( ip_saddr = " . $ip . " OR ip_daddr = " . $ip . " ) ";
+        if ($include == "include") $where .= " AND ( hex(ip_saddr) = '" . $ip . "' OR hex(ip_daddr) = '" . $ip . "' ) ";
+        elseif ($include == "exclude") $where .= " AND !( hex(ip_saddr) = '" . $ip . "' OR hex(ip_daddr) = '" . $ip . "' ) ";
       }
     }
     return $where;
@@ -478,52 +582,71 @@ class ulogd_json {
 
       $extrawhere = "";
       $filters_ip = convertRequestToParams($request, "dataset", "ip");
-      if (is_array($filters_ip) and count($filters_ip) > 0) {
-        foreach($filters_ip as $filter) {
-          if (isset($filter["host"])) {
-            $extrawhere .= $this->filterToWhere($filter);
+      $filters_port = convertRequestToParams($request, "dataset", "port");
+
+      if (array_key_exists("isolate_ip", $request) and $request["isolate_ip"] == "true") {
+        // IP based
+        // Results are based on IPs ; do we need to add an extra port filter to the queries?
+        if (is_array($filters_port) and count($filters_port) > 0) {
+          foreach($filters_port as $filter) {
+            //if (isset($filter["host"])) {
+              $extrawhere .= $this->filterToWhere($filter);
+            //}
           }
+        }
+        // Multi source graph or not
+        if (count($filters_ip) > 0) {
+          $container = array();
+          foreach($filters_ip as $filter) {
+            $key = "";
+            $filter["extrawhere"] = $extrawhere;
+            if (isset($filter["host"])) $key = custom_filter_input($filter["host"]);
+            if (strlen($key) > 0) $container[$key] = $this->getData($timeframe , $filter);
+          }
+
+          $json = buildDataset_convertcolumns($container);
+        }
+        else {
+          $container = $this->getData($timeframe, array( "extrawhere" => $extrawhere));
+          $json = buildDataset_convertcolumns($container);
         }
       }
 
-      $filters = convertRequestToParams($request, "dataset", "port");
-      $json['cols'][] = array('type' => 'string');
+      else {  // PORT based
+        // Results are based on ports ; do we need to add an extra IP filter to the queries?
+        if (is_array($filters_ip) and count($filters_ip) > 0) {
+          foreach($filters_ip as $filter) {
+            if (isset($filter["host"])) {
+              $extrawhere .= $this->filterToWhere($filter);
+            }
+          }
+        }
 
-      // Multi source graph or not
-      if (count($filters) > 0) {
+        // Multi source graph or not
         $container = array();
-        foreach($filters as $filter) {
-          $key = "";
-          $filter["extrawhere"] = $extrawhere;
-          if (isset($filter["port"]) and $filter["port"] != -1 ) $key = $filter["protocol"] . " / " . $filter["port"];
-          elseif (isset($filter["protocol"])) $key = $filter["protocol"];
+        if (count($filters_port) <= 0) $container["base"] = $this->getData($timeframe , $filter);          
+          foreach($filters_port as $filter) {
+            $key = "";
+            $filter["extrawhere"] = $extrawhere;
+            if (isset($filter["port"]) and $filter["port"] != -1 ) $key = $filter["protocol"] . " / " . $filter["port"];
+            elseif (isset($filter["protocol"])) $key = $filter["protocol"];
 
-          if (strlen($key) > 0)  $container[$key] = $this->getData($timeframe , $filter);
-        }
-
-        // Build the columns
-        foreach($container as $key => $cont) {
-          $json["cols"][] = array( "label" => $key. " ", "type" => "number");          
-        }
-        $first = reset($container);
-        foreach($first as $key => $value) {
-          $t = array();
-          $t[] = array( "v" => $key);
-          foreach($container as $cont) {
-            $t[] = array( "v" => $cont[$key]);
+            if (strlen($key) > 0)  $container[$key] = $this->getData($timeframe , $filter);
           }
-          $json["rows"][] = array( "c" => $t);
-        }
-      }
-      else {
-        $container = $this->getData($timeframe, array( "extrawhere" => $extrawhere));
-        $json['cols'][] = array('type' => 'number', 'label' => 'hits');
-        foreach($container as $key => $value) {
-          $json['rows'][]['c'] = array(
-              array('v' => $key),
-              array('v' => $value)
-          );        
-        }
+
+          $json = buildDataset_convertcolumns($container);
+        /*}
+        else {
+          $json['cols'][] = array('type' => 'string');
+          $container = $this->getData($timeframe, array( "extrawhere" => $extrawhere));
+          $json['cols'][] = array('type' => 'number', 'label' => 'hits');
+          foreach($container as $key => $value) {
+            $json['rows'][]['c'] = array(
+                array('v' => $key),
+                array('v' => $value)
+            );        
+          }
+        }*/
       }
 
       if (array_key_exists("return", $request) and $request["return"] == "data") return $json;
@@ -620,6 +743,17 @@ class ulogd_json {
               "sql_from" => "from_unixtime(oob_time_sec, '$sql_timeframe')"
         );      
     }
+    elseif ($timeframe == "last2day") {
+      $sql_timeframe = "%d/%m %H:00";
+      $result = array(
+              "starttime" =>  mktime(date("H") , date("i"), date("s"), date("m") , date("d") - 2, date("Y")),
+              "for_x" => 48,
+              "str_to_time" => "hour",
+              "date_str" => "d/m H:00",
+              "sql_timeframe" =>  $sql_timeframe,
+              "sql_from" => "from_unixtime(oob_time_sec, '$sql_timeframe')"
+        );      
+    }    
     elseif ($timeframe == "last3day") {
       $sql_timeframe = "%d/%m %H:00";
       $result = array(
@@ -630,8 +764,8 @@ class ulogd_json {
               "sql_timeframe" =>  $sql_timeframe,
               "sql_from" => "from_unixtime(oob_time_sec, '$sql_timeframe')"
         );      
-    }    
-    elseif ($timeframe = "lastmonth") {
+    }
+    elseif ($timeframe == "lastmonth") {
       $sql_timeframe = "%d/%m";
       $result = array(
               "starttime" =>  mktime(date("H") , date("i"), date("s"), date("m") - 1, date("d") , date("Y")),
@@ -642,7 +776,7 @@ class ulogd_json {
               "sql_from" => "from_unixtime(oob_time_sec, '$sql_timeframe')"
         );
     }
-    elseif ($timeframe = "last3month") {
+    elseif ($timeframe == "last3month") {
       $sql_timeframe = "%d/%m";
       $result = array(
               "starttime" =>  mktime(date("H") , date("i"), date("s"), date("m") - 3, date("d") , date("Y")),
@@ -690,7 +824,6 @@ class ulogd_json {
                 FROM " . DB_TABLE . "
                 WHERE oob_time_sec > " . $data_variables["starttime"] . 
                   $where . " " . $extrawhere . " GROUP BY " . $data_variables["sql_from"];
-//echo $sql;
       $result = mysqli_query( $con, $sql );
 
       while($row = mysqli_fetch_assoc($result)) {

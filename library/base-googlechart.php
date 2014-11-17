@@ -43,7 +43,7 @@ function googlechart_getOptions($options = array()) {
   if ($smoothLine) $printsmoothLine = "true";
   else $printsmoothLine = "false";
 
-  if ($legend) $printlegend = "{position: 'right'}";
+  if ($legend) $printlegend = "{position: 'top'}";
   else $printlegend = "{position: 'none'}";
 
   if ($chartArea == "large") {

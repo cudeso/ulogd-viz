@@ -59,4 +59,6 @@ define('DB_TABLE', $configuration["database"]["ulogtable"]);
 
 
 define('APP_UNKNOWN', 'Unknown');
+
+define('FILTER_VALIDATE_STRING', 'FILTER_VALIDATE_STRING');
 ?>

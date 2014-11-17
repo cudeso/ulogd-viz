@@ -16,8 +16,8 @@ set_include_path(implode(PATH_SEPARATOR, array(
 require_once "../config/ulogd.php";
 
 
-ulogd_printhtmlHead($_SERVER["PHP_SELF"]);
-ulogd_printhtmlBodyStart($_SERVER["PHP_SELF"]);
+ulogd_printhtmlHead(custom_filter_input($_SERVER["PHP_SELF"]));
+ulogd_printhtmlBodyStart(custom_filter_input($_SERVER["PHP_SELF"]));
 
 $get = $_GET;
 

@@ -108,7 +108,7 @@ function convertRequestToParams($request, $type = "dataset", $returnset = "all")
                     if ($flow == "source")  $str_label .= " from ";
                     elseif ($flow == "dest") $str_label .= " to ";
                     elseif ($flow == "sourcedest") $str_label .= " from/to ";
-                    $str_ipflow = " '" . $flow . "' , ";
+                    $str_ipflow .= " '" . $flow . "' , ";
 
                     array_push($filters_ip, array( "host" => trim($host), "flow" => $flow, "include" => $include));
                     $str_ip .= " '" . $host . "' , ";
@@ -159,7 +159,8 @@ function timeframeToHtml($timeframe) {
         if ($timeframe == "lastday")    $r = "Last day";
         elseif ($timeframe == "lasthour")   $r = "Last hour";
         elseif ($timeframe == "last4hour")   $r = "Last 4 hours";
-        elseif ($timeframe == "last3day")   $r = "Last 3 days";        
+        elseif ($timeframe == "last2day")   $r = "Last 2 days";
+        elseif ($timeframe == "last3day")   $r = "Last 3 days";
         elseif ($timeframe == "lastweek")   $r = "Last week";
         elseif ($timeframe == "lastmonth")   $r = "Last month";
         elseif ($timeframe == "last3month")   $r = "Last 3 months";
@@ -182,9 +183,56 @@ function timeframeToHtml($timeframe) {
  */
 function db2ip($value) {
     if (strlen($value) > 0) {
-        return long2ip(hexdec($value));
+        return long2ip(hexdec(trim($value)));
     }
     else return APP_UNKNOWN;
+}
+
+
+
+/** 
+ * Convert a value from an IP to a database field
+ *
+ *  value       string       the IP
+ *  @return     string       a string containing the database value
+ */
+function ip2db($value) {
+    if (strlen($value) > 0) {
+        /*$long = sprintf('%010u', ip2long($value));*/
+        return strtoupper("00000000000000000000FFFF" . sprintf("%08s", dechex(ip2long(trim($value)))));
+        //return strtoupper("00000000000000000000FFFF" . dechex(ip2long(trim($value))));
+    }
+    else return APP_UNKNOWN;
+}
+
+
+
+/** 
+ * Convert a value from a string to a DB timevalue
+ *
+ *  value       string       the string
+ *  @return     string       a string containing the database value
+ */
+function date2time($value) {
+    if (strlen($value) > 0) {
+        return strtotime($value);
+    }
+    else return APP_UNKNOWN;
+}
+
+
+
+/** 
+ * Convert a value from a DB timevalue to a string
+ *
+ *  value       string       the DB timevalue
+ *  @return     string       a string containing the time value
+ */
+function time2date($value) {
+    if (strlen($value) > 0) {
+        return date(DEFAULT_DATEFORMAT_LONG, $value);
+    }
+    else return APP_UNKNOWN;    
 }
 
 
@@ -195,7 +243,7 @@ function db2ip($value) {
  *  debug       array       print the content of this value
  *  @return     nothing
  */
-function myprint_r($debug) {
+function custom_print_r($debug) {
     echo "<hr />";
     if (is_array($debug))   print_r($debug);
     else echo $debug;
@@ -203,4 +251,63 @@ function myprint_r($debug) {
 }
 
 
+
+
+/** 
+ * Custom filter
+ *
+ *  value       string      what value to filter
+ *  filter      string      what filter to apply
+ *  options     array       array with options
+ *  @return     filtered string
+ */
+function custom_filter_input($value, $filter = FILTER_VALIDATE_STRING, $options = array()) {
+
+    if (is_array($options)) {
+        if (array_key_exists("length", $options))   $length = (int) $options["length"];
+    }
+
+    switch($filter) {
+        case FILTER_VALIDATE_IP:
+        case FILTER_VALIDATE_INT:
+        case FILTER_VALIDATE_FLOAT: {
+            return filter_var($value, $filter);
+            break;
+        }
+        case FILTER_VALIDATE_STRING:
+        default: {
+            return (string) filter_var($value, FILTER_SANITIZE_STRING);
+        }
+    }
+}
+
+
+
+/** 
+ * Helper for buildDataset to convert columns
+ *
+ *  debug       array       print the content of this value
+ *  @return     nothing
+ */
+function buildDataset_convertcolumns($container) {
+   $json = array();
+
+   $json['cols'][] = array('type' => 'string');
+
+   // Build the columns
+  foreach($container as $key => $cont) {
+    $json["cols"][] = array( "label" => $key. " ", "type" => "number");          
+  }
+  $first = reset($container);
+  foreach($first as $key => $value) {
+    $t = array();
+    $t[] = array( "v" => $key);
+    foreach($container as $cont) {
+      $t[] = array( "v" => $cont[$key]);
+    }
+    $json["rows"][] = array( "c" => $t);
+  } 
+
+  return $json;
+}
 ?>

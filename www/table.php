@@ -15,11 +15,11 @@ set_include_path(implode(PATH_SEPARATOR, array(
 )));
 require_once "../config/ulogd.php";
 
-
-ulogd_printhtmlHead($_SERVER["PHP_SELF"]);
-ulogd_printhtmlBodyStart($_SERVER["PHP_SELF"]);
+ulogd_printhtmlHead(custom_filter_input($_SERVER["PHP_SELF"]));
+ulogd_printhtmlBodyStart(custom_filter_input($_SERVER["PHP_SELF"]));
 
 $get = $_GET;
+$server_querystring = $_SERVER["QUERY_STRING"];
 
 if (array_key_exists("timeframe",$get)) {
   $timeframe = strtolower($get["timeframe"]);
@@ -41,12 +41,7 @@ $tableheader = "
 
 <div class="row">
     <div class="col-lg-12">
-        <h3>Table for <?php echo timeframeToHtml($timeframe);?> <small>(limited to <?php echo DEFAULT_MAXRECORDS_DB; ?> records)</small></h3>
-    </div>
-</div>
-<div class="row">
-    <div class="col-lg-12">
-        <small>tables don't use IP / port filtering yet</small>
+        <h3>Table for <?php echo timeframeToHtml($timeframe);?> <small>(limited to <?php echo DEFAULT_MAXRECORDS_DB; ?> records)</small>&nbsp;&nbsp;<small><?php echo convertRequestToParams($get, "label"); ?></small></h3>
     </div>
 </div>
 <div class="row">
@@ -74,11 +69,10 @@ $tableheader = "
 <script>
     $(document).ready(function() {
         $('#json-table').dataTable( {
-             "aaSorting": [[ 0, "desc" ]],
-             "iDisplayLength": 25,
-             "bProcessing": true,
-             "sAjaxSource": 'get.php?table=table&timeframe=<?php echo $timeframe;?>'
-
+            "pageLength": 50,
+            "order": [[ 0, "desc" ]],
+            "processing": true,
+             "sAjaxSource": 'get.php?table=table&timeframe=<?php echo $timeframe;?>&<?php echo $server_querystring; ?>'
         });
     });
 </script>

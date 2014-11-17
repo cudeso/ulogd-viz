@@ -16,8 +16,8 @@ set_include_path(implode(PATH_SEPARATOR, array(
 require_once "../config/ulogd.php";
 
 
-ulogd_printhtmlHead($_SERVER["PHP_SELF"]);
-ulogd_printhtmlBodyStart($_SERVER["PHP_SELF"]);
+ulogd_printhtmlHead(custom_filter_input($_SERVER["PHP_SELF"]));
+ulogd_printhtmlBodyStart(custom_filter_input($_SERVER["PHP_SELF"]));
 
 ?>
 
@@ -71,6 +71,7 @@ ulogd_printhtmlBodyStart($_SERVER["PHP_SELF"]);
                                     <option value="last4hour">Last 4 hours</option>
                                     <option value="last12hour">Last 12 hours</option>
                                     <option value="lastday" selected >Last 24 hours</option>
+                                    <option value="last2day">Last 2 days</option>
                                     <option value="last3day">Last 3 days</option>
                                     <option value="lastweek">Last week</option>
                                     <option value="lastmonth">Last month</option>
@@ -115,6 +116,19 @@ ulogd_printhtmlBodyStart($_SERVER["PHP_SELF"]);
                               <a id="add-ip" href="#" class="btn btn-default btn-success btn-sm"><span class="glyphicon glyphicon-plus-sign"></span> Add IP</a>
                             </div>                                  
                           </div>
+
+                          <div class="col-lg-4">
+                            <div class="form-group">
+                                <label>Isolate results</label><br />
+                                <label class="radio-inline">
+                                    <input type="radio" name="isolateresult" id="isolate_port" value="isolate_port" checked>Isolate based on ports
+                                </label><br />
+                                <label class="radio-inline">
+                                    <input type="radio" name="isolateresult" id="isolate_ip" value="isolate_ip">Isolate based on IPs
+                                </label><br />
+                            </div>
+                          </div>
+
                         </div>
                       </form>
                     </div>
@@ -127,6 +141,22 @@ ulogd_printhtmlBodyStart($_SERVER["PHP_SELF"]);
               </div>
             </div> 
 
+            <div class="row">
+               <div class="col-lg-12">
+                    <div class="col-lg-6 dashboard-portlet" id="top_src_port">
+                      <div class="alert alert-success">
+                        <h4>Trending source ports <br /><small>Last 24 hours against previous 24 hours</small></h4>
+                        <h3 class="text-right" id="trending_src_ports"></h3>
+                      </div>
+                    </div>
+                    <div class="col-lg-6 dashboard-portlet" id="top_dst_port">
+                      <div class="alert alert-success">
+                        <h4>Trending destination ports <br /><small>Last 24 hours against previous 24 hours</small></h4>
+                        <h3 class="text-right" id="trending_dst_ports"></h3>
+                      </div>
+                    </div>
+                </div>
+            </div>
             <div class="row">
                <div class="col-lg-12">
                     <div class="col-lg-3">
@@ -150,7 +180,7 @@ ulogd_printhtmlBodyStart($_SERVER["PHP_SELF"]);
                       </div>
                     </div>
 
-                    <div class="col-lg-3">
+                    <div class="col-lg-3 dashboard-portlet" id="top_ip">
                       <div class="alert alert-success">
                         <h4>Top IP <br /><small>last 24 hours</small></h4>
                         <h3 class="text-right" id="topIp_today"></h3>
@@ -196,14 +226,14 @@ ulogd_printhtmlBodyStart($_SERVER["PHP_SELF"]);
               <div class="col-lg-12">
                 <div class="col-lg-6 dashboard-portlet" id="top_port-5">
                   <div class="alert alert-success">
-                    <h4>Top 5 Ports<br /><small>24 hours</small></h4>
+                    <h4>Top 5 Source Ports<br /><small>24 hours</small></h4>
                     <h3 class="text-right" id="topPort_today_5"></h3>
                   </div>
                 </div>
 
-                <div class="col-lg-6 dashboard-portlet" id="top-ip-5">
+                <div class="col-lg-6 dashboard-portlet" id="top_ip-5">
                   <div class="alert alert-success">
-                    <h4>Top 5 IPs<br /><small>24 hours</small></h4>
+                    <h4>Top 5 Source IPs<br /><small>24 hours</small></h4>
                     <h3 class="text-right" id="topIp_today_5"></h3>
                   </div>
                 </div>
@@ -245,6 +275,56 @@ ulogd_printhtmlBodyStart($_SERVER["PHP_SELF"]);
         </div>
     <script>
 
+        /* ***
+            Trending boxes 
+           ***
+        */
+        $.getJSON('get.php', { topPort: "lastday", portcount: 5, trending: true, direction: "dport"}, function(json) {
+            url_topPort_dst = "generate.php?timeframe=lastday&formoutput=output_chart&";
+            html = "";
+            if (json[0].noresults == true)  {
+              html = "<small>No results</small>";
+            }
+            else {            
+              $.each(json, function(key, i) {
+                html = html + i.protocol + "/" + i.port + "<div class=\"small\" style=\"width:150px;\"><small>" + i.increase + " % (" + i.qt_from + "->" + i.qt_to + " pkts)</small></div> <br /> ";
+                url_topPort_dst = url_topPort_dst + "protocol[]=" + i.protocol + "&port[]=" + i.port + "&";
+              });
+
+              $(document).ready(function() { 
+                $('#top_dst_port').on('click', function(e){
+                  document.location.href=url_topPort_dst;
+                });
+              });
+            }
+            $("#trending_dst_ports").empty().append( html );
+        });
+
+        $.getJSON('get.php', { topPort: "lastday", portcount: 5, trending: true, direction: "sport"}, function(json) {
+            url_topPort_src = "generate.php?timeframe=lastday&formoutput=output_chart&";
+            html = "";
+            if (json[0].noresults == true)  {
+              html = "<small>No results</small>";
+            }
+            else {
+              $.each(json, function(key, i) {
+                html = html + i.protocol + "/" + i.port + "<div class=\"small\" style=\"width:150px;\"><small>" + i.increase + " % (" + i.qt_from + "->" + i.qt_to + " pkts)</small></div> <br /> ";
+                url_topPort_src = url_topPort_src + "protocol[]=" + i.protocol + "&port[]=" + i.port + "&";
+              });              
+
+              $(document).ready(function() { 
+                $('#top_src_port').on('click', function(e){
+                  document.location.href=url_topPort_src;
+                });
+              });              
+            }
+            $("#trending_src_ports").empty().append( html );
+        });
+
+        /* ***
+            Number of entries
+           ***
+        */
         $.getJSON('get.php', { numberOfEntries: "all"}, function(json) {
             $("#numberofentries_alltime").empty().append( json.result );
         });
@@ -253,9 +333,12 @@ ulogd_printhtmlBodyStart($_SERVER["PHP_SELF"]);
             $("#numberofentries_alltime_today").empty().append( json.result );
         });
 
-
+        /* ***
+            Top Port, Top 5-Port , Top IP and Top 5-IP
+           ***
+        */
         $.getJSON('get.php', { topPort: "lastday"}, function(json) {
-          html = json[0].protocol + "/" + json[0].port + " <small>" + json[0].qt + "</small>";
+          html = json[0].protocol + "/" + json[0].port + " <br /><small>" + json[0].qt + "</small>";
           url_topPort_today = "generate.php?timeframe=lastday&protocol[]=" + json[0].protocol + "&port[]=" + json[0].port + "&formoutput=output_chart";
           $("#topPort_today").empty().append( html);
           $(document).ready(function() { 
@@ -278,19 +361,26 @@ ulogd_printhtmlBodyStart($_SERVER["PHP_SELF"]);
               $('#top_port-5').on('click', function(e){
                 document.location.href=url_topPort_today_5;
               });
-            });  
+            });
         });
 
         $.getJSON('get.php', { topIp: "lastday"}, function(json) {
-            $("#topIp_today").empty().append( json[0][0].ip );
+            html = json[0][0].ip + " <br /><small>" + json[0][0].qt + "</small>";
+            url_topIp_today = "generate.php?timeframe=lastday&ip[]=" + json[0][0].ip + "&ipflow[]=source&formoutput=output_chart";
+            $("#topIp_today").empty().append( html);
+            $(document).ready(function() { 
+              $('#top_ip').on('click', function(e){
+                document.location.href=url_topIp_today;
+              });
+            });
         });
 
         $.getJSON('get.php', { topIp: "lastday", ipcount: 5}, function(json) {
-            url_topIp_today_5 = "generate.php?timeframe=lastday&formoutput=output_chart&";
+            url_topIp_today_5 = "generate.php?timeframe=lastday&formoutput=output_chart&isolateresult=isolate_ip&";
             html = "";
             $.each(json[0], function(key, i) {
               html = html + i.ip + " <div class=\"small\"><small>" + i.qt + "</small></div> <br />";
-              url_topIp_today_5 = url_topIp_today_5 + "ipinclude[]=include&ip[]=" + i.ip + "&ipflow[]=source&";
+              url_topIp_today_5 = url_topIp_today_5 + "ipinclude[]=include&ipflow[]=source&ip[]=" + i.ip + "&";
             });
             $("#topIp_today_5").empty().append( html );
 
@@ -301,11 +391,15 @@ ulogd_printhtmlBodyStart($_SERVER["PHP_SELF"]);
             });  
         });
 
+        /* ***
+            Specific ports
+           ***
+        */
         $.getJSON('get.php', { topPort: "lastday", port: 22, protocol: "tcp" }, function(json) {
           $("#topPort_ssh_today").empty().append( json[0].qt );
           $(document).ready(function() { 
             $('#ssh_warning').on('click', function(e){
-              url = "generate.php?timeframe=lastday&protocol[]=" + json[0].protocol + "&port[]=" + json[0].port + "&formoutput=output_chart";
+              url = "generate.php?timeframe=lastday&protocol[]=tcp&port[]=22&formoutput=output_chart";
               document.location.href=url;
             });
           });
@@ -325,7 +419,8 @@ ulogd_printhtmlBodyStart($_SERVER["PHP_SELF"]);
           $("#topPort_dns_today").empty().append( json[0].qt );
           $(document).ready(function() { 
             $('#dns_today').on('click', function(e){
-              url = "generate.php?timeframe=lastday&protocol[]=" + json[0].protocol + "&port[]=" + json[0].port + "&formoutput=output_chart";
+              url = "generate.php?timeframe=lastday&protocol[]=udp&port[]=53&formoutput=output_chart";
+              alert(url);
               document.location.href=url;
             });
           });            

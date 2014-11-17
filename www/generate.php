@@ -16,20 +16,26 @@ set_include_path(implode(PATH_SEPARATOR, array(
 require_once "../config/ulogd.php";
 
 
-ulogd_printhtmlHead($_SERVER["PHP_SELF"]);
-ulogd_printhtmlBodyStart($_SERVER["PHP_SELF"]);
+ulogd_printhtmlHead(custom_filter_input($_SERVER["PHP_SELF"]));
+ulogd_printhtmlBodyStart(custom_filter_input($_SERVER["PHP_SELF"]));
 
 $get = $_GET;
 
 if (array_key_exists("timeframe",$get)) {
-  $timeframe = strtolower($get["timeframe"]);
+  $timeframe = custom_filter_input(strtolower($get["timeframe"]));
 }
 else $timeframe = DEFAULT_TIMEFRAME;
 
 $params_filter = convertRequestToParams($get, "ajax");
+
+if (array_key_exists("isolateresult",$get)) {
+  if ($get["isolateresult"] == "isolate_ip")  $params_filter .= ", isolate_ip: true ";
+}
+
 $params = " timeframe: '".$timeframe."' ";
 $shortcut_name = $timeframe . convertRequestToParams($get, "shortcut_name");
-$csv_url = "get.php?chart=csv&" . $_SERVER["QUERY_STRING"];
+$csv_url = "get.php?chart=csv&" . custom_filter_input($_SERVER["QUERY_STRING"]);
+$table_url = "table.php?" . custom_filter_input($_SERVER["QUERY_STRING"]);
 
 if (strlen($params_filter) > 0) {
   $params .= " , ".$params_filter;
@@ -116,7 +122,8 @@ else {
 
 <div class="row">
     <div class="col-lg-10">
-        <a href="<?php echo APP_WEBROOT . $csv_url; ?>" class="btn btn-warning btn-sm"><i class="fa fa-list"></i> Export to CSV</a>
+        <a href="<?php echo APP_WEBROOT . $csv_url; ?>" class="btn btn-warning btn-sm"><i class="fa fa-save"></i> Export to CSV</a>
+        <a href="<?php echo APP_WEBROOT . $table_url; ?>" class="btn btn-info btn-sm"><i class="fa fa-list"></i> List records</a>        
         <button class="btn btn-success btn-sm" data-toggle="modal" data-target="#shortcutModal"><i class="fa fa-bookmark"></i> Save as shortcut</button>
     </div>
     <div class="col-lg-2">

@@ -68,7 +68,7 @@ mark {
   background: #ff0;
 }
 small {
-  font-size: 80%;
+  font-size: 50%;
 }
 sub,
 sup {
@@ -412,7 +412,7 @@ h2 .small,
 .h2 .small,
 h3 .small,
 .h3 .small {
-  font-size: 65%;
+  font-size: 50%;
 }
 h4,
 .h4,

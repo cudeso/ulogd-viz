@@ -17,8 +17,6 @@ require_once "../config/ulogd.php";
 
 $get = $_GET;
 
-//print_r($get);
-
 if (is_array($get)) {
   $ulogd_json = new ulogd_json();
   $ulogd_shortcut = new ulogd_shortcut();
@@ -52,5 +50,4 @@ if (is_array($get)) {
   }
 
 }
-// http://camelot.cudeso.be/ulogd/www/get.php?chart=googlechart&timeframe=lastday&protocol%5B%5D=tcp&protocol%5B%5D=tcp&protocol%5B%5D=udp&protocol%5B%5D=udp&protocol%5B%5D=udp&port%5B%5D=80&port%5B%5D=22&port%5B%5D=17500&port%5B%5D=137&port%5B%5D=138
 ?>
