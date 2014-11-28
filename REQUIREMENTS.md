@@ -24,10 +24,10 @@ sudo pear install Net_GeoIP
 Make sure that there's a geoip.dat file on the location defined in the ini file. You can get a version from Maxmind.
  http://dev.maxmind.com/geoip/legacy/geolite/
 
-'''
+```
 [geoip]
 database = "/var/www/html/ulogd-viz/library/geoipdb.dat"
-'''
+```
 
 # Ulog
 
@@ -51,7 +51,7 @@ The ulog configuration is done in **ulogd.conf** (often in /etc)
 
 This is a diff covering the changes compared to the default configuration.
 
-'''
+```
 +loglevel=1
 -loglevel=3
 
@@ -79,19 +79,18 @@ This is a diff covering the changes compared to the default configuration.
  table="ulog"
 +pass="changemeto"
 -pass="changeme"
-
-'''
+```
 
 ## Iptables configuration for ulog
 
 You have to tell ulog what packets to "log". This is done via iptables. You can limit the type of packets that are logged by adding filters to the iptables expression.
 
-'''
+```
 iptables -I INPUT -j NFLOG --nflog-group 1 --nflog-threshold 20
-'''
+```
 
 or use this to exclude one specific network.
 
-'''
+```
 iptables -I INPUT -j NFLOG --nflog-group 1 --nflog-threshold 20 ! -s 1.2.0.0/16
-'''
+```
