@@ -1,49 +1,17 @@
-# Requirements
-
-ulogd-viz depends on a LAMP stack with ulogd installed
-
-------------------------------------------------------------------------------------------
-
-# Apache
-
-Apply user authentication and restriction on the web server level.
-
-# Mysql
-
-sudo apt-get install mysql-server php5-mysql
-
-# PHP
-
-## Pear
-
-sudo apt-get install php-pear
-sudo pear install Net_GeoIP
-
-## GeopIP
-
-Make sure that there's a geoip.dat file on the location defined in the ini file. You can get a version from Maxmind.
- http://dev.maxmind.com/geoip/legacy/geolite/
-
-```
-[geoip]
-database = "/var/www/html/ulogd-viz/library/geoipdb.dat"
-```
-
 # Ulog
-
-## ulogd2-msql
-
-sudo apt-get install ulogd2-mysql
-sudo chown ulog /var/log/ulog/
 
 ## Create a database, user and generate the tables
 
+```
 create database nulog;
 create user 'nulog'@'localhost' identified by 'changeme';
 grant all privileges on nulog.* to 'nulog'@'localhost';
 flush privileges;
+```
 
+```
 zcat /usr/share/doc/ulogd2/mysql-ulogd2.sql.gz | mysql -u changeme -p nulog
+```
 
 ## Ulog configuration file
 
@@ -94,3 +62,9 @@ or use this to exclude one specific network.
 ```
 iptables -I INPUT -j NFLOG --nflog-group 1 --nflog-threshold 20 ! -s 1.2.0.0/16
 ```
+
+## Discard multiple IPs
+
+The easiest way to discard multiple sources is by using a modified version of the ulogd init script from https://github.com/cudeso/tools/tree/master/ulogd
+
+That init script takes a list of sources, builds a chain with IPs to ignore and then logs all the rest. Make sure that you have your INPUT chain (or what ever chain you want to track) jump to the ULOGD_exclude (or similar) chain.
