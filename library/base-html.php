@@ -98,7 +98,21 @@ function ulogd_printhtmlTopMenu($page = "") {
             </li> 
             <li>
                 <a href="<?php echo APP_WEBROOT; ?>statistics.php"><i class="fa fa-wrench fa-fw"></i> Statistics</a>
-            </li>            
+            </li>
+            <li>
+                <a href=""><i class="fa fa-external-link fa-fw"></i> External links<span class="fa arrow"></span></a>
+                <ul class="nav nav-second-level">
+                    <?php 
+                    if ((EXTERNAL_LINKS != NULL) and strlen(EXTERNAL_LINKS) > 0) {
+                        $l = explode("|", EXTERNAL_LINKS);
+                        for ($x = 0; $x <= (int) count($l) / 2; $x = $x + 2) {
+                            echo "<li><a href=\"" . $l[$x]."\">" . $l[$x+1] . "</a></li>";    
+                        }
+                        
+                    }
+                    ?>
+                </ul>
+            </li>
         </ul>
         <!-- /#side-menu -->
     </div>

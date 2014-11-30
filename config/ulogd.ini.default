@@ -2,6 +2,7 @@
 title = "Ulogd Visualizer"
 version = 0.1
 webroot = "/ulogd-viz/www/"
+external_links = "https://www.github.com|Github|https://www.google.com|Google"
 
 [geoip]
 database = "/var/www/htdocs/ulogd-viz/library/geoipdb.dat"

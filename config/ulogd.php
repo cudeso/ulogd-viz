@@ -32,6 +32,8 @@ define('APP_VERSION', $configuration["application"]["version"]);
 
 define('APP_WEBROOT', $configuration["application"]["webroot"]);
 
+define('EXTERNAL_LINKS', $configuration["application"]["external_links"]);
+
 define('DEFAULT_TIMEFRAME', $configuration["defaults"]["timeframe"]);
 define('DEFAULT_TIMEFRAME_TABLE', $configuration["defaults"]["timeframe_table"]);
 define('DEFAULT_MAXFILTER', $configuration["defaults"]["maxfilters"]);
@@ -56,7 +58,6 @@ define('DB_PASSWORD', $configuration["database"]["password"]);
 define('DB_DATABASE', $configuration["database"]["database"]);
 define('DB_HOST', $configuration["database"]["host"]);
 define('DB_TABLE', $configuration["database"]["ulogtable"]);
-
 
 define('APP_UNKNOWN', 'Unknown');
 

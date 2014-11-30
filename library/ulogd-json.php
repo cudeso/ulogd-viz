@@ -63,7 +63,7 @@ class ulogd_json {
   *
   */
   public function buildFullDataset($request = array()) {
-    if (!(array_key_exists("timeframe",$request))) $request["timeframe"] = DEFAULT_TIMEFRAME;
+    if (is_array($request) and !(array_key_exists("timeframe",$request))) $request["timeframe"] = DEFAULT_TIMEFRAME;
     $timeframe = strtolower($request["timeframe"]);
     if (!strlen($timeframe) > 0)  $timeframe = DEFAULT_TIMEFRAME;    
     $time = $this->convertTimeframeParam($timeframe);
@@ -137,7 +137,7 @@ class ulogd_json {
   */
   public function blacklistHits($request = array()) {
 
-    if (!(array_key_exists("blacklist",$request))) $request["blacklist"] = DEFAULT_MAXFILTERT_TIMEFRAME;
+    if (is_array($request) and !(array_key_exists("blacklist",$request))) $request["blacklist"] = DEFAULT_MAXFILTERT_TIMEFRAME;
     $timeframe = strtolower($request["blacklist"]);
     $time = $this->convertTimeframeParam($timeframe);
 
@@ -183,16 +183,16 @@ class ulogd_json {
   */
   public function topIp($request = array()) {
 
-    if (!(array_key_exists("topIp",$request))) $request["topIp"] = DEFAULT_TIMEFRAME;
+    if (is_array($request) and !(array_key_exists("topIp",$request))) $request["topIp"] = DEFAULT_TIMEFRAME;
     $timeframe = strtolower($request["topIp"]);
     $time = $this->convertTimeframeParam($timeframe);
 
-    if (!(array_key_exists("destination",$request))) $request["destination"] = "source";
+    if (is_array($request) and !(array_key_exists("destination",$request))) $request["destination"] = "source";
     $destination = strtolower($request["destination"]);
     if ($destination == "source") $destination = "ip_saddr";
     else $destination = "ip_daddr";
 
-    if (!(array_key_exists("ipcount",$request))) $request["ipcount"] = 1;
+    if (is_array($request) and !(array_key_exists("ipcount",$request))) $request["ipcount"] = 1;
     $ipcount = (int) $request["ipcount"];
 
     $con = mysqli_connect(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
@@ -224,7 +224,7 @@ class ulogd_json {
   */
   public function topPort($request = array()) {
 
-    if (!(array_key_exists("topPort",$request))) $request["topPort"] = DEFAULT_TIMEFRAME;
+    if (is_array($request) and !(array_key_exists("topPort",$request))) $request["topPort"] = DEFAULT_TIMEFRAME;
     $timeframe = strtolower($request["topPort"]);
     $time = $this->convertTimeframeParam($timeframe);
 
@@ -234,7 +234,7 @@ class ulogd_json {
     $where .= $this->filterToWhere($request);
 
     $limit = 1;
-    if (array_key_exists("portcount", $request)) {
+    if (is_array($request) and array_key_exists("portcount", $request)) {
       $portcount = (int) $request["portcount"];
       if ($portcount > 0) {
         $limit = $portcount;
@@ -244,10 +244,10 @@ class ulogd_json {
     $con = mysqli_connect(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
     $result = array();
 
-    if (array_key_exists("trending", $request) and $request["trending"] == true) {
+    if (is_array($request) and array_key_exists("trending", $request) and $request["trending"] == true) {
       /* Trending results
         */
-      if (!(array_key_exists("direction",$request))) $request["direction"] = "dport";
+      if (is_array($request) and !(array_key_exists("direction",$request))) $request["direction"] = "dport";
       $direction = $request["direction"];
       if ($direction != "dport" and $direction != "sport") $direction = "dport";
 
@@ -374,12 +374,12 @@ class ulogd_json {
   */
   public function numberOfEntries($request = array()) {
 
-    if (!(array_key_exists("numberOfEntries",$request))) $request["numberOfEntries"] = DEFAULT_TIMEFRAME;
+    if (is_array($request) and !(array_key_exists("numberOfEntries",$request))) $request["numberOfEntries"] = DEFAULT_TIMEFRAME;
     $timeframe = strtolower($request["numberOfEntries"]);
     $time = $this->convertTimeframeParam($timeframe);
 
     $where = "";
-    if (array_key_exists("protocol",$request)) {
+    if (is_array($request) and array_key_exists("protocol",$request)) {
       $protocol = strtolower($request["protocol"]);
       if ($protocol == "tcp") $where = " AND ip_protocol = 6";
       elseif ($protocol == "udp") $where = " AND ip_protocol = 17";
@@ -412,7 +412,7 @@ class ulogd_json {
   */
   public function getStats($request = array()) {
 
-    if (array_key_exists("stats",$request)) {
+    if (is_array($request) and array_key_exists("stats",$request)) {
       $stats = strtolower($request["stats"]);
       if ($stats == "first") $order = " ASC ";
       else $order = " DESC ";
@@ -451,7 +451,7 @@ class ulogd_json {
     if (is_array($request)) {
 
       // Did we get a timeframe?
-      if (!(array_key_exists("timeframe",$request))) $request["timeframe"] = DEFAULT_TIMEFRAME;
+      if (is_array($request) and !(array_key_exists("timeframe",$request))) $request["timeframe"] = DEFAULT_TIMEFRAME;
       $timeframe = strtolower($request["timeframe"]);
       if (!strlen($timeframe) > 0)  $timeframe = DEFAULT_TIMEFRAME;
 
@@ -505,7 +505,7 @@ class ulogd_json {
 
       array_push($result, array( "counters" => array( "markerrecount" => $markerrecount, "count" => $markercount, "countdb" => $markercountdb )));
 
-      if (array_key_exists("return", $request) and $request["return"] == "data") return $result;
+      if (is_array($request) and array_key_exists("return", $request) and $request["return"] == "data") return $result;
       else echo json_encode( $result ); 
     }
     else return false;
@@ -523,13 +523,13 @@ class ulogd_json {
   */
   private function filterToWhere($filter) {
     $where = "";
-    if (array_key_exists("protocol",$filter)) {
+    if (is_array($filter) and array_key_exists("protocol",$filter)) {
       $protocol = strtolower($filter["protocol"]);
       if ($protocol == "tcp") $where .= " AND ip_protocol = 6 ";
       elseif ($protocol == "udp") $where .= " AND ip_protocol = 17 ";
       elseif ($protocol == "icmp") $where .= " AND ip_protocol = 1 ";
     }
-    if (array_key_exists("port",$filter)) {
+    if (is_array($filter) and array_key_exists("port",$filter)) {
       $port = (int) $filter["port"];
       if ($port >= 0) {
         if ($protocol == "tcp") $where .= " AND tcp_dport = $port ";
@@ -538,7 +538,7 @@ class ulogd_json {
         elseif ($protocol == "any") $where .= " AND (tcp_dport = $port OR udp_dport = $port OR icmp_type = $port ) ";        
       }
     }
-    if (array_key_exists("host", $filter)) {
+    if (is_array($filter) and array_key_exists("host", $filter)) {
       $ip = ip2db($filter["host"]);
       $flow = $filter["flow"];
       $include = $filter["include"];
@@ -576,7 +576,7 @@ class ulogd_json {
     if (is_array($request)) {
       
       // Did we get a timeframe?
-      if (!(array_key_exists("timeframe",$request))) $request["timeframe"] = DEFAULT_TIMEFRAME;
+      if (is_array($request) and !(array_key_exists("timeframe",$request))) $request["timeframe"] = DEFAULT_TIMEFRAME;
       $timeframe = strtolower($request["timeframe"]);
       if (!strlen($timeframe) > 0)  $timeframe = DEFAULT_TIMEFRAME;
 
@@ -584,7 +584,7 @@ class ulogd_json {
       $filters_ip = convertRequestToParams($request, "dataset", "ip");
       $filters_port = convertRequestToParams($request, "dataset", "port");
 
-      if (array_key_exists("isolate_ip", $request) and $request["isolate_ip"] == "true") {
+      if (is_array($request) and array_key_exists("isolate_ip", $request) and $request["isolate_ip"] == "true") {
         // IP based
         // Results are based on IPs ; do we need to add an extra port filter to the queries?
         if (is_array($filters_port) and count($filters_port) > 0) {
@@ -625,16 +625,16 @@ class ulogd_json {
         // Multi source graph or not
         $container = array();
         if (count($filters_port) <= 0) $container["base"] = $this->getData($timeframe , $filter);          
-          foreach($filters_port as $filter) {
-            $key = "";
-            $filter["extrawhere"] = $extrawhere;
-            if (isset($filter["port"]) and $filter["port"] != -1 ) $key = $filter["protocol"] . " / " . $filter["port"];
-            elseif (isset($filter["protocol"])) $key = $filter["protocol"];
+        foreach($filters_port as $filter) {
+          $key = "";
+          $filter["extrawhere"] = $extrawhere;
+          if (isset($filter["port"]) and $filter["port"] != -1 ) $key = $filter["protocol"] . " / " . $filter["port"];
+          elseif (isset($filter["protocol"])) $key = $filter["protocol"];
 
-            if (strlen($key) > 0)  $container[$key] = $this->getData($timeframe , $filter);
-          }
+          if (strlen($key) > 0)  $container[$key] = $this->getData($timeframe , $filter);
+        }
 
-          $json = buildDataset_convertcolumns($container);
+        $json = buildDataset_convertcolumns($container);
         /*}
         else {
           $json['cols'][] = array('type' => 'string');
@@ -649,7 +649,7 @@ class ulogd_json {
         }*/
       }
 
-      if (array_key_exists("return", $request) and $request["return"] == "data") return $json;
+      if (is_array($request) and array_key_exists("return", $request) and $request["return"] == "data") return $json;
       else echo json_encode( $json );
     }
     else return false;
@@ -815,7 +815,7 @@ class ulogd_json {
         $result_container[$i] = 0;
       }
 
-      if (array_key_exists("extrawhere", $filters)) $extrawhere = $filters["extrawhere"];
+      if (is_array($filters) and array_key_exists("extrawhere", $filters)) $extrawhere = $filters["extrawhere"];
       else $extrawhere = "";
 
       $con = mysqli_connect(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
@@ -827,7 +827,7 @@ class ulogd_json {
       $result = mysqli_query( $con, $sql );
 
       while($row = mysqli_fetch_assoc($result)) {
-        if (array_key_exists($row["t"], $result_container)) $result_container[$row["t"]] = $row["qt"];        
+        if (is_array($result_container) and array_key_exists($row["t"], $result_container)) $result_container[$row["t"]] = $row["qt"];        
       }
       $result_container = array_reverse($result_container);        
 
