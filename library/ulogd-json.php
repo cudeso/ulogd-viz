@@ -624,7 +624,7 @@ class ulogd_json {
 
         // Multi source graph or not
         $container = array();
-        if (count($filters_port) <= 0) $container["base"] = $this->getData($timeframe , $filter);          
+        if (count($filters_port) <= 0) $container["base"] = $this->getData($timeframe , array());          
         foreach($filters_port as $filter) {
           $key = "";
           $filter["extrawhere"] = $extrawhere;
